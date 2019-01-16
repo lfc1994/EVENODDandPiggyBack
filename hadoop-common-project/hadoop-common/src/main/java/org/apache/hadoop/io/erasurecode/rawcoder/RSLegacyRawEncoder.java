@@ -79,7 +79,7 @@ public class RSLegacyRawEncoder extends RawErasureEncoder {
         tmp = ByteBuffer.allocate(encodingState.inputs[i].remaining());
         tmp.put(encodingState.inputs[i]);
         tmp.flip();
-        all[encodingState.outputs.length + i] = tmp;
+        all[encodingState.outputs.length + i] = tmp;    //校验数据放在前面，
       }
     }
 

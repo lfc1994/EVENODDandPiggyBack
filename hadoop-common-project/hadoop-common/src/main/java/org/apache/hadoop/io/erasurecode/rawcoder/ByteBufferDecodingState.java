@@ -28,9 +28,9 @@ import java.nio.ByteBuffer;
  */
 @InterfaceAudience.Private
 class ByteBufferDecodingState extends DecodingState {
-  ByteBuffer[] inputs;
-  ByteBuffer[] outputs;
-  int[] erasedIndexes;
+  ByteBuffer[] inputs;//一整个的条带的全部输入
+  ByteBuffer[] outputs;//读一个条带时候，不能读出数据的位置，有自己的0123...索引
+  int[] erasedIndexes;//一个条带中损坏的块的索引
   boolean usingDirectBuffer;
 
   ByteBufferDecodingState(RawErasureDecoder decoder, ByteBuffer[] inputs,

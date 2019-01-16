@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.io.erasurecode;
 
+import org.apache.hadoop.io.erasurecode.rawcoder.util.EVENODDUtil;
+
 /**
  * Constants related to the erasure code feature.
  */
@@ -31,6 +33,12 @@ public final class ErasureCodeConstants {
   public static final String XOR_CODEC_NAME = "xor";
   public static final String HHXOR_CODEC_NAME = "hhxor";
   public static final String REPLICATION_CODEC_NAME = "replication";
+  public static final String EVENODD_CODEC_NAME = "evenodd";
+
+
+  public static final ECSchema EVENODD_3_2_SCHEMA = new ECSchema(
+          EVENODD_CODEC_NAME,3,2
+  );
 
   public static final ECSchema RS_6_3_SCHEMA = new ECSchema(
       RS_CODEC_NAME, 6, 3);

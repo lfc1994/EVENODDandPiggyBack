@@ -109,7 +109,7 @@ public abstract class RawErasureDecoder {
     for (int i = 0; i < inputs.length; i++) {
       if (inputs[i] != null) {
         // dataLen bytes consumed
-        inputs[i].position(inputPositions[i] + dataLen);
+        inputs[i].position(inputPositions[i] + dataLen); //更新一波新的游标
       }
     }
   }
