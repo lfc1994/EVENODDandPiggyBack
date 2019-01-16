@@ -117,7 +117,7 @@ abstract class StripeReader {
   protected final RawErasureDecoder decoder;
   protected final DFSStripedInputStream dfsStripedInputStream;
 
-  protected ECChunk[] decodeInputs;
+  protected ECChunk[] decodeInputs;//代表一整个条带
 
   StripeReader(AlignedStripe alignedStripe,
       ErasureCodingPolicy ecPolicy, LocatedBlock[] targetBlocks,
@@ -186,7 +186,7 @@ abstract class StripeReader {
     for (int i = 0; i < dataBlkNum; i++) {
       Preconditions.checkNotNull(alignedStripe.chunks[i]);
       if (alignedStripe.chunks[i].state == StripingChunk.REQUESTED) {
-        if (!readChunk(targetBlocks[i], i)) {
+        if (!readChunk(targetBlocks[i], i)) { //真正读数据的地方
           alignedStripe.missingChunksNum++;
         }
       }
@@ -317,10 +317,11 @@ abstract class StripeReader {
    * read the whole stripe. do decoding if necessary
    */
   void readStripe() throws IOException {
+//    先把一个条带中的所有系统数据遍历一遍，看看缺失的节点十几个
     for (int i = 0; i < dataBlkNum; i++) {
       if (alignedStripe.chunks[i] != null &&
           alignedStripe.chunks[i].state != StripingChunk.ALLZERO) {
-        if (!readChunk(targetBlocks[i], i)) {
+        if (!readChunk(targetBlocks[i], i)) {//读取一个条带数据是要使用多线程的，该函数就是实现了实现了callable 为后续的future准备
           alignedStripe.missingChunksNum++;
         }
       }
@@ -331,7 +332,7 @@ abstract class StripeReader {
       checkMissingBlocks();
       readDataForDecoding();
       // read parity chunks
-      readParityChunks(alignedStripe.missingChunksNum);
+      readParityChunks(alignedStripe.missingChunksNum); //假设已经损失一个系统数据，就读校验数据，如果出校验数据还出现丢的情况就接着读，否则读一个校验数据
     }
     //将能读到的块的数据放在futures里面，这是一个map，其中的第二个参数就是代表的条带中的index
     // TODO: for a full stripe we can start reading (dataBlkNum + 1) chunks
@@ -341,7 +342,7 @@ abstract class StripeReader {
     while (!futures.isEmpty()) {
       try {
         StripingChunkReadResult r = StripedBlockUtil
-            .getNextCompletedStripedRead(service, futures, 0); // service是一个线程池
+            .getNextCompletedStripedRead(service, futures, 0); // service是一个线程池，在这一步进行主线程等待所有子线程任务结束
         if (DFSClient.LOG.isDebugEnabled()) {
           DFSClient.LOG.debug("Read task returned: " + r + ", for stripe "
               + alignedStripe);
@@ -397,7 +398,7 @@ abstract class StripeReader {
       final StripingChunk chunk = alignedStripe.chunks[i];
       if (chunk != null && chunk.state == StripingChunk.FETCHED) {
         if (chunk.useChunkBuffer()) {
-          chunk.getChunkBuffer().copyTo(decodeInputs[i].getBuffer());
+          chunk.getChunkBuffer().copyTo(decodeInputs[i].getBuffer()); //position清零，此处之所以要用copyTo，是因为后面用到了copyFrom的方法，个人觉得主要是为了缓存
         } else {
           chunk.getByteBuffer().flip();
         }

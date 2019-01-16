@@ -819,13 +819,13 @@ public class StripedBlockUtil {
    * A utility to manage ByteBuffer slices for a reader.
    */
   public static class ChunkByteBuffer {
-    private final List<ByteBuffer> slices;
+    private final List<ByteBuffer> slices;//为什么要弄一个list，直接一个大buffer不好吗？
 
     ChunkByteBuffer() {
       this.slices = new ArrayList<>();
     }
 
-    public void addSlice(ByteBuffer buffer, int offset, int len) {
+    public void addSlice(ByteBuffer buffer, int offset, int len) { //在何处初始化？
       ByteBuffer tmp = buffer.duplicate();
       tmp.position(buffer.position() + offset);
       tmp.limit(buffer.position() + offset + len);

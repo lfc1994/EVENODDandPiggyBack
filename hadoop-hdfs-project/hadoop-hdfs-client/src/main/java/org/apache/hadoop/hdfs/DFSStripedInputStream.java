@@ -317,7 +317,8 @@ public class DFSStripedInputStream extends DFSInputStream {
     final LocatedBlock[] blks = StripedBlockUtil.parseStripedBlockGroup(
         blockGroup, cellSize, dataBlkNum, parityBlkNum);
     // read the whole stripe
-    for (AlignedStripe stripe : stripes) {
+    //因为偏移量的初值加终结位置可能横跨了两个stripe，这时候是要进行补全成两个条带，所以这里使用数组stripes
+    for (AlignedStripe stripe : stripes) {//这个stripe应该是cellsize级别的条带
       // Parse group to get chosen DN location
       StripeReader sreader = new StatefulStripeReader(stripe, ecPolicy, blks,
           blockReaders, corruptedBlocks, decoder, this);

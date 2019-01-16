@@ -359,6 +359,7 @@ public class DFSStripedOutputStream extends DFSOutputStream
    * Encode the buffers, i.e. compute parities.
    *
    * @param buffers data buffers + parity buffers
+   *                每个buffer的大小都是cellsize的大小
    */
   private static void encode(RawErasureEncoder encoder, int numData,
       ByteBuffer[] buffers) throws IOException {
@@ -366,7 +367,7 @@ public class DFSStripedOutputStream extends DFSOutputStream
     final ByteBuffer[] parityBuffers = new ByteBuffer[buffers.length - numData];
     System.arraycopy(buffers, 0, dataBuffers, 0, dataBuffers.length);
     System.arraycopy(buffers, numData, parityBuffers, 0, parityBuffers.length);
-
+    //上述进行分类处理，将buffers拆成data和parity
     encoder.encode(dataBuffers, parityBuffers);
   }
 
@@ -516,15 +517,15 @@ public class DFSStripedOutputStream extends DFSOutputStream
   @Override
   protected synchronized void writeChunk(byte[] bytes, int offset, int len,
       byte[] checksum, int ckoff, int cklen) throws IOException {
-    final int index = getCurrentIndex();//对于stripe而言是哪一个DataNode
+    final int index = getCurrentIndex();//对于stripe而言是哪一个DataNode，以下都是单线程写一个cell
     final int pos = cellBuffers.addTo(index, bytes, offset, len);
     final boolean cellFull = pos == cellSize;
-
+    //检查这波块组有没有都写完
     if (currentBlockGroup == null || shouldEndBlockGroup()) {
       // the incoming data should belong to a new block. Allocate a new block.
       allocateNewBlock();
     }
-
+    //因为往block中写入一定长度的字节，所以要更新该类的block的字节长度描述信息
     currentBlockGroup.setNumBytes(currentBlockGroup.getNumBytes() + len);
     // note: the current streamer can be refreshed after allocating a new block
     final StripedDataStreamer current = getCurrentStreamer();
@@ -544,8 +545,9 @@ public class DFSStripedOutputStream extends DFSOutputStream
       //When all data cells in a stripe are ready, we need to encode
       //them and generate some parity cells. These cells will be
       //converted to packets and put to their DataStreamer's queue.
+      //此处是写的过程中写满一组stripe中datanum的cell就开是编码。还有就是调用关闭方法也就是该类的closeImpl时候也会进行填充0并结束开始编码
       if (next == numDataBlocks) {
-        cellBuffers.flipDataBuffers();
+        cellBuffers.flipDataBuffers(); //将position清零
         writeParityCells();
         next = 0;
         // if this is the end of the block group, end each internal block
@@ -565,7 +567,7 @@ public class DFSStripedOutputStream extends DFSOutputStream
           checkStreamerFailures();
         }
       }
-      setCurrentStreamer(next);
+      setCurrentStreamer(next);//选择下一个streamer线程
     }
   }
 
