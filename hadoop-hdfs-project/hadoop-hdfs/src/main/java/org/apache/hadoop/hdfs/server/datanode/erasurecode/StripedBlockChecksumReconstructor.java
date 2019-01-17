@@ -55,7 +55,8 @@ public abstract class StripedBlockChecksumReconstructor
 
   private void init() throws IOException {
     initDecoderIfNecessary();
-    getStripedReader().init();
+    String codecName = getEcPolicy().getCodecName();
+    getStripedReader().init(codecName);
     // allocate buffer to keep the reconstructed block data
     targetBuffer = allocateBuffer(getBufferSize());
     long maxTargetLen = 0L;
@@ -80,7 +81,7 @@ public abstract class StripedBlockChecksumReconstructor
             .min(getStripedReader().getBufferSize(), remaining);
         // step1: read from minimum source DNs required for reconstruction.
         // The returned success list is the source DNs we do real read from   读取数据的地方
-        getStripedReader().readMinimumSources(toReconstructLen);
+        getStripedReader().readMinimumSources(toReconstructLen,getEcPolicy().getCodecName());
 
         // step2: decode to reconstruct targets
         reconstructTargets(toReconstructLen);
