@@ -746,6 +746,15 @@
   </description>
 </property>
 
+  <property>
+    <name>io.erasurecode.codec.evenodd</name>
+    <value>evenodd_java</value>
+    <description>
+      Comma separated raw coder implementations for the rs-legacy codec. The earlier
+      factory is prior to followings in case of failure of creating raw coders.
+    </description>
+  </property>
+
 <property>
   <name>io.erasurecode.codec.xor.rawcoders</name>
   <value>xor_native,xor_java</value>

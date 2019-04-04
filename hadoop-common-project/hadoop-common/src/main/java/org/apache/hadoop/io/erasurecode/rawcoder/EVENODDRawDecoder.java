@@ -157,26 +157,17 @@ public class EVENODDRawDecoder extends RawErasureDecoder {
     }
 
     protected void doDecode(ByteArrayDecodingState decodingState) {
-        byte[] output = decodingState.outputs[0];
-        int dataLen = decodingState.decodeLength;
-        CoderUtil.resetOutputBuffers(decodingState.outputs,
-                decodingState.outputOffsets, dataLen);
-        int erasedIdx = decodingState.erasedIndexes[0];
-
-        // Process the inputs.
-        int iIdx, oIdx;
-        for (int i = 0; i < decodingState.inputs.length; i++) {
-            // Skip the erased location.
-            if (i == erasedIdx) {
-                continue;
-            }
-
-            for (iIdx = decodingState.inputOffsets[i],
-                         oIdx = decodingState.outputOffsets[0];
-                 iIdx < decodingState.inputOffsets[i] + dataLen; iIdx++, oIdx++) {
-                output[oIdx] ^= decodingState.inputs[i][iIdx];
-            }
+        int decodeLenth = decodingState.decodeLength;
+        ByteBuffer[] outputByteBuffers = new ByteBuffer[decodingState.outputs.length];
+        ByteBuffer[] inputByteBuffers = new ByteBuffer[decodingState.inputs.length];
+        for (int i=0;i<outputByteBuffers.length;i++){
+            outputByteBuffers[i] = ByteBuffer.wrap(decodingState.outputs[i],decodingState.outputOffsets[i],decodeLenth);
         }
+        for (int j=0;j<inputByteBuffers.length;j++){
+            inputByteBuffers[j] = ByteBuffer.wrap(decodingState.inputs[j],decodingState.inputOffsets[j],decodeLenth);
+        }
+        ByteBufferDecodingState byteBufferDecodingState = new ByteBufferDecodingState(decodingState.decoder,decodeLenth,decodingState.erasedIndexes,inputByteBuffers,outputByteBuffers);
+        doDecode(byteBufferDecodingState);
     }
 }
 

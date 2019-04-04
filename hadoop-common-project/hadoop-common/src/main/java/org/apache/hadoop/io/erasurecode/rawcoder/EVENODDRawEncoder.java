@@ -55,5 +55,16 @@ public class EVENODDRawEncoder extends RawErasureEncoder {
 
     @Override
     protected void doEncode(ByteArrayEncodingState encodingState) throws IOException {
+        int dataLength = encodingState.encodeLength;
+        ByteBuffer[] inputBuffers = new ByteBuffer[encodingState.inputs.length];
+        ByteBuffer[] outputBuffers = new ByteBuffer[encodingState.outputs.length];
+        for (int i=0;i<inputBuffers.length;i++){
+            inputBuffers[i] = ByteBuffer.wrap(encodingState.inputs[i],encodingState.inputOffsets[i],dataLength);
+        }
+        for (int j=0;j<outputBuffers.length;j++){
+            outputBuffers[j] = ByteBuffer.wrap(encodingState.outputs[j],encodingState.outputOffsets[j],dataLength);
+        }
+        ByteBufferEncodingState byteBufferEncodingState = new ByteBufferEncodingState(encodingState.encoder,inputBuffers,outputBuffers);
+        doEncode(byteBufferEncodingState);
     }
 }
