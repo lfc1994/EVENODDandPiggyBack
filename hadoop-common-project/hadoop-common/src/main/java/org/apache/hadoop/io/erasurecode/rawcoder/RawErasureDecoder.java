@@ -99,12 +99,14 @@ public abstract class RawErasureDecoder {
       }
     }
 
-    if (usingDirectBuffer) {
-      doDecode(decodingState);
-    } else {
-      ByteArrayDecodingState badState = decodingState.convertToByteArrayState();
-      doDecode(badState);
-    }
+//    if (usingDirectBuffer) {
+//      doDecode(decodingState);
+//    } else {
+//      ByteArrayDecodingState badState = decodingState.convertToByteArrayState();
+//      doDecode(badState);
+//    }
+
+    doDecode(decodingState);
 
     for (int i = 0; i < inputs.length; i++) {
       if (inputs[i] != null) {

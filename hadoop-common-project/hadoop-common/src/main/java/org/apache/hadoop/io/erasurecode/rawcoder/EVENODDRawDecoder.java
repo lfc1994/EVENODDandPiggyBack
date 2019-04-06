@@ -163,7 +163,16 @@ public class EVENODDRawDecoder extends RawErasureDecoder {
         for (int i=0;i<outputByteBuffers.length;i++){
             outputByteBuffers[i] = ByteBuffer.wrap(decodingState.outputs[i],decodingState.outputOffsets[i],decodeLenth);
         }
+        int indexInerasureArray = 0;
         for (int j=0;j<inputByteBuffers.length;j++){
+            //此处有些部分在前文有些坏掉的erasedIndexes是设置为null的，所以会有空指针异常！！！
+            if(indexInerasureArray <= decodingState.erasedIndexes.length-1){
+                if (j==decodingState.erasedIndexes[indexInerasureArray]){
+                    inputByteBuffers[j] =null;
+                    indexInerasureArray++;
+                    continue;
+                }
+            }
             inputByteBuffers[j] = ByteBuffer.wrap(decodingState.inputs[j],decodingState.inputOffsets[j],decodeLenth);
         }
         ByteBufferDecodingState byteBufferDecodingState = new ByteBufferDecodingState(decodingState.decoder,decodeLenth,decodingState.erasedIndexes,inputByteBuffers,outputByteBuffers);

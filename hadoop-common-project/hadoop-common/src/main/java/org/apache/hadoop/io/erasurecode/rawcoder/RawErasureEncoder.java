@@ -83,13 +83,13 @@ public abstract class RawErasureEncoder {
       }
     }
 
-    if (usingDirectBuffer) {
-      doEncode(bbeState);
-    } else {
-      ByteArrayEncodingState baeState = bbeState.convertToByteArrayState();
-      doEncode(baeState);
-    }
-
+//    if (usingDirectBuffer) {
+//      doEncode(bbeState);
+//    } else {
+//      ByteArrayEncodingState baeState = bbeState.convertToByteArrayState();
+//      doEncode(baeState);
+//    }
+    doEncode(bbeState);
     for (int i = 0; i < inputs.length; i++) {
       if (inputs[i] != null) {
         // dataLen bytes consumed
