@@ -3,17 +3,15 @@ package org.apache.hadoop.io.erasurecode.coder;
 import org.apache.hadoop.io.erasurecode.*;
 import org.apache.hadoop.io.erasurecode.rawcoder.RawErasureEncoder;
 
-public class EVENODDErasureEncoder extends ErasureEncoder {
-    public EVENODDErasureEncoder(ErasureCoderOptions options) {
+public class HHErasureEncoder extends ErasureEncoder {
+    public HHErasureEncoder(ErasureCoderOptions options) {
         super(options);
     }
 
     @Override
-    protected ErasureCodingStep prepareEncodingStep(
-
-            final ECBlockGroup blockGroup) {
+    protected ErasureCodingStep prepareEncodingStep(ECBlockGroup blockGroup) {
         RawErasureEncoder rawEncoder = CodecUtil.createRawEncoder(getConf(),
-                ErasureCodeConstants.EVENODDPlus_CODEC_NAME, getOptions());
+                ErasureCodeConstants.Hitchhiker_CODEC_NAME, getOptions());
 
         ECBlock[] inputBlocks = getInputBlocks(blockGroup);
 

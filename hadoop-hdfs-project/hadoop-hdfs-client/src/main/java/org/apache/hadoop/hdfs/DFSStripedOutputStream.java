@@ -48,6 +48,7 @@ import org.apache.htrace.core.TraceScope;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
@@ -1073,7 +1074,13 @@ public class DFSStripedOutputStream extends DFSOutputStream
       return;
     }
     //encode the data cells
+    RandomAccessFile randomAccessFile = new RandomAccessFile("/opt/encodeTime","rw");
+    long fileLength = randomAccessFile.length();
+    randomAccessFile.seek(fileLength);
+    long start = System.currentTimeMillis();
     encode(encoder, numDataBlocks, buffers);
+    long end = System.currentTimeMillis();
+    randomAccessFile.writeBytes(Long.toString(end-start)+"\n");
     for (int i = numDataBlocks; i < numAllBlocks; i++) {
       writeParity(i, buffers[i], cellBuffers.getChecksumArray(i));
     }

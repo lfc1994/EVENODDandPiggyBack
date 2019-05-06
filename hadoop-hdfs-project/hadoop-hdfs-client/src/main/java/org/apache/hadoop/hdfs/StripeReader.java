@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.DFSUtilClient.CorruptedBlocks;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -381,7 +382,12 @@ abstract class StripeReader {
     }
 
     if (alignedStripe.missingChunksNum > 0) {
+      RandomAccessFile randomAccessFile = new RandomAccessFile("/opt/decodeTime","rw");
+      randomAccessFile.seek(randomAccessFile.length());
+      long  start = System.currentTimeMillis();
       decode();
+      long  end = System.currentTimeMillis();
+      randomAccessFile.writeBytes(Long.toString(end-start)+'\n');
     }
   }
 

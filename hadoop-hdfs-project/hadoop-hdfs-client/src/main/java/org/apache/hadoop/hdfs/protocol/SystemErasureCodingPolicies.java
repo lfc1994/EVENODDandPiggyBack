@@ -42,6 +42,7 @@ public final class SystemErasureCodingPolicies {
 
   // 1 MB
   private static final int DEFAULT_CELLSIZE = 1024 * 1024;
+  private static final int HH_CELLSIZE = 1020 * 1024;
 
   public static final byte RS_6_3_POLICY_ID = 1;
   private static final ErasureCodingPolicy SYS_POLICY1 =
@@ -73,8 +74,20 @@ public final class SystemErasureCodingPolicies {
       new ErasureCodingPolicy(ErasureCodeConstants.EVENODD_3_2_SCHEMA,
               DEFAULT_CELLSIZE,EVENODD_3_2_POLICY_ID);
 
+  public static final byte HH_6_3_POLICY_ID = 7;
+  private static final ErasureCodingPolicy SYS_POLICY7 =
+          new ErasureCodingPolicy(ErasureCodeConstants.Hitchhiker_6_3_SCHEMA,
+                  HH_CELLSIZE,HH_6_3_POLICY_ID);
 
+  public static final byte EVENODDPlus_3_2_POLICY_ID = 8;
+  private static final ErasureCodingPolicy SYS_POLICY8 =
+          new ErasureCodingPolicy(ErasureCodeConstants.EVENODDPlus_3_2_SCHEMA,
+                  DEFAULT_CELLSIZE,EVENODDPlus_3_2_POLICY_ID);
 
+  public static final byte HHNew_6_3_POLICY_ID = 9;
+  private static final ErasureCodingPolicy SYS_POLICY9 =
+          new ErasureCodingPolicy(ErasureCodeConstants.HitchhikerNew_6_3_SCHEMA,
+                  HH_CELLSIZE,HHNew_6_3_POLICY_ID);
 
   // REPLICATION policy is always enabled.
   private static final ErasureCodingPolicy REPLICATION_POLICY =
@@ -86,7 +99,7 @@ public final class SystemErasureCodingPolicies {
   private static final List<ErasureCodingPolicy> SYS_POLICIES =
       Collections.unmodifiableList(Arrays.asList(
           SYS_POLICY1, SYS_POLICY2, SYS_POLICY3, SYS_POLICY4,
-          SYS_POLICY5,SYS_POLICY6));
+          SYS_POLICY5,SYS_POLICY6,SYS_POLICY7,SYS_POLICY8,SYS_POLICY9));
 
   /**
    * System policies sorted by name for fast querying.

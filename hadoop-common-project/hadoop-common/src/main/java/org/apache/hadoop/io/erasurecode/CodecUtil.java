@@ -59,15 +59,27 @@ public final class CodecUtil {
       IO_ERASURECODE_CODEC + "rs";
   public static final String IO_ERASURECODE_CODEC_RS =
       RSErasureCodec.class.getCanonicalName();
-  /** Erasure coder hitch hiker XOR codec. */
+  /** Erasure coder hitch hiker XOR codec. 原Hitchhiker-XOR*/
   public static final String IO_ERASURECODE_CODEC_HHXOR_KEY =
       IO_ERASURECODE_CODEC + "hhxor";
   public static final String IO_ERASURECODE_CODEC_HHXOR =
-      HHXORErasureCodec.class.getCanonicalName();
+      HHErasureCodec.class.getCanonicalName();
 
-  /** Erasure coder EVENODD codec.*/
-  public static final String IO_ERASURECODE_CODEC_EVENODD_KEY =
+  /** Erasure coder hitch hiker XOR (new) codec.改进后的Hitchhiker-XOR*/
+  public static final String IO_ERASURECODE_CODEC_HHXOR_NEW_KEY =
+          IO_ERASURECODE_CODEC + "hhxornew";
+  public static final String IO_ERASURECODE_CODEC_HHXORNEW =
+          HHXORNewErasureCodec.class.getCanonicalName();
+
+  /** Erasure coder EVENODD codec.原EVENODD*/
+  public static final String IO_ERASURECODE_CODEC_EVENODDOriginal_KEY =
           IO_ERASURECODE_CODEC + "evenodd";
+  public static final String IO_ERASURECODE_CODEC_EVENODDOriginal =
+          EVENODDOriginalErasureCodec.class.getCanonicalName();
+
+  /** Erasure coder EVENODD+ codec.改进后的EVENODD+*/
+  public static final String IO_ERASURECODE_CODEC_EVENODD_KEY =
+          IO_ERASURECODE_CODEC + "evenoddplus";
   public static final String IO_ERASURECODE_CODEC_EVENODD =
           EVENODDErasureCodec.class.getCanonicalName();
 
@@ -256,10 +268,25 @@ public final class CodecUtil {
       return conf.get(
           CodecUtil.IO_ERASURECODE_CODEC_HHXOR_KEY,
           CodecUtil.IO_ERASURECODE_CODEC_HHXOR);
-      case ErasureCodeConstants.EVENODD_CODEC_NAME :
+      case ErasureCodeConstants.EVENODDPlus_CODEC_NAME:
         return conf.get(
           CodecUtil.IO_ERASURECODE_CODEC_EVENODD_KEY,
                 CodecUtil.IO_ERASURECODE_CODEC_EVENODD
+        );
+      case  ErasureCodeConstants.Hitchhiker_CODEC_NAME:
+        return conf.get(
+                CodecUtil.IO_ERASURECODE_CODEC_HHXOR_KEY,
+                CodecUtil.IO_ERASURECODE_CODEC_HHXOR
+        );
+      case  ErasureCodeConstants.HitchhikerNew_CODEC_Name:
+        return conf.get(
+                CodecUtil.IO_ERASURECODE_CODEC_HHXOR_NEW_KEY,
+                CodecUtil.IO_ERASURECODE_CODEC_HHXORNEW
+        );
+      case  ErasureCodeConstants.EVENODD_CODEC_NAME:
+        return conf.get(
+                CodecUtil.IO_ERASURECODE_CODEC_EVENODDOriginal_KEY,
+                CodecUtil.IO_ERASURECODE_CODEC_EVENODDOriginal
         );
     default:
       // For custom codec, we throw exception if the factory is not configured

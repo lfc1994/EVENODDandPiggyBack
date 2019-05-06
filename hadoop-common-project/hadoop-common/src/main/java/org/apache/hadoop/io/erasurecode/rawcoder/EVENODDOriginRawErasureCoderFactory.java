@@ -3,23 +3,17 @@ package org.apache.hadoop.io.erasurecode.rawcoder;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.io.erasurecode.ErasureCodeConstants;
 import org.apache.hadoop.io.erasurecode.ErasureCoderOptions;
-
-/**
- * A raw coder factory for the raw EVENODD coder in Java.
- */
 @InterfaceAudience.Private
-public class EVENODDRawErasureCoderFactory implements RawErasureCoderFactory {
-
-    public static final String CODER_NAME = "evenodd_java";
-
+public class EVENODDOriginRawErasureCoderFactory implements RawErasureCoderFactory{
+    public static final String CODER_NAME = "evenodd_origin_java";
     @Override
     public RawErasureEncoder createEncoder(ErasureCoderOptions coderOptions) {
-        return new EVENODDRawEncoder(coderOptions);
+        return new EVENODDOriginRawEncoder(coderOptions);
     }
 
     @Override
     public RawErasureDecoder createDecoder(ErasureCoderOptions coderOptions) {
-        return new EVENODDRawDecoder(coderOptions);
+        return new EVENODDOriginRawDecoder(coderOptions);
     }
 
     @Override
@@ -29,6 +23,6 @@ public class EVENODDRawErasureCoderFactory implements RawErasureCoderFactory {
 
     @Override
     public String getCodecName() {
-        return ErasureCodeConstants.EVENODDPlus_CODEC_NAME;
+        return ErasureCodeConstants.EVENODD_CODEC_NAME;
     }
 }

@@ -185,21 +185,21 @@ class StripedBlockReader {
   }
 
 /**
- * piggyBack 修复前2个系统节点中任意一个错误后读取数据操作
+ * HitchhikerNew 修复前2个系统节点中任意一个错误后读取数据操作
  * */
-  Callable<Void> readFromBlockPiggyPre2Des(final int length,
-                               final CorruptedBlocks corruptedBlocks) {
+  Callable<Void> readFromBlockHHNewPre2Des(final int length,
+                                           final CorruptedBlocks corruptedBlocks) {
     return new Callable<Void>() {
 
       @Override
       public Void call() throws Exception {
         try {
-          blockReader.skip(length); //跳过4层中的第1层
-          getReadBuffer().limit(length);
-          actualReadFromBlock();  //读4层中的第2层
-          blockReader.skip(length); //跳过4层中的第3层
-          getReadBuffer().limit(length*2);
-          actualReadFromBlock();  //读4层中的第4层
+          blockReader.skip(length); //跳过4层中的第1层,不读a
+          getReadBuffer().limit(2*length);
+          actualReadFromBlock();  //读4层中的第2层,读b
+          blockReader.skip(length); //跳过4层中的第3层，不读c
+          getReadBuffer().limit(4*length);
+          actualReadFromBlock();  //读4层中的第4层，读d
           return null;
         } catch (ChecksumException e) {
           LOG.warn("Found Checksum error for {} from {} at {}", block,
@@ -214,18 +214,45 @@ class StripedBlockReader {
     };
   }
   /**
-   * piggyBack 修复后2个系统节点中任意一个错误后读取数据操作
+   * HitchhikerNew 修复后2个系统节点中任意一个错误后读取数据操作
    * */
-  Callable<Void> readFromBlockPiggyNext2Des(final int length,
-                                           final CorruptedBlocks corruptedBlocks) {
+  Callable<Void> readFromBlockHHNewNext2Des(final int length,
+                                            final CorruptedBlocks corruptedBlocks) {
     return new Callable<Void>() {
 
       @Override
       public Void call() throws Exception {
         try {
           blockReader.skip(length*2); //跳过4层中的第1，2层
-          getReadBuffer().limit(length*2);
+          getReadBuffer().limit(length*4);
           actualReadFromBlock();  //读4层中的第3,4层
+          return null;
+        } catch (ChecksumException e) {
+          LOG.warn("Found Checksum error for {} from {} at {}", block,
+                  source, e.getPos());
+          corruptedBlocks.addCorruptedBlock(block, source);
+          throw e;
+        } catch (IOException e) {
+          LOG.info(e.getMessage());
+          throw e;
+        }
+      }
+    };
+  }
+
+  /**
+   * Hitchhiker 修复前2个系统节点中任意一个错误后读取数据操作
+   * */
+  Callable<Void> readFromBlockHHPre2Des(final int length,
+                                           final CorruptedBlocks corruptedBlocks) {
+    return new Callable<Void>() {
+
+      @Override
+      public Void call() throws Exception {
+        try {
+          blockReader.skip(length); //跳过2层中的第1层,不读a
+          getReadBuffer().limit(2*length);
+          actualReadFromBlock();  //读4层中的第2层,读b
           return null;
         } catch (ChecksumException e) {
           LOG.warn("Found Checksum error for {} from {} at {}", block,

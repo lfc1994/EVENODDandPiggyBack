@@ -7,6 +7,7 @@ import org.apache.hadoop.ipc.RpcWritable;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 
 @InterfaceAudience.Private
@@ -19,6 +20,14 @@ public class EVENODDRawDecoder extends RawErasureDecoder {
                 decodingState.decodeLength);
         int unitLenth = decodingState.decodeLength/EVENODDUtil.rawSum;
         int[] erasuredIndex = decodingState.erasedIndexes;
+        //为了适配evenodd函数而做的一些辅助性操作
+        int outPutIndex = 0;
+        for (int j=0;j<decodingState.inputs.length;j++){
+            if (decodingState.inputs[j]==null){
+                decodingState.inputs[j]=decodingState.outputs[outPutIndex];
+                outPutIndex++;
+            }
+        }
         if (erasuredIndex.length ==1){   //单节点故障
             repairOneByXOR(decodingState.inputs,erasuredIndex[0]);
         }else {   //双节点故障
@@ -101,13 +110,14 @@ public class EVENODDRawDecoder extends RawErasureDecoder {
         if (evenOdd !=null){
             temp = (byte)(temp ^ evenOdd[indexInUnitbyte]);
         }
+        //空指针异常
         input[column].put( raw*unitLength+indexInUnitbyte,temp);
     }
 
     /**
      * 单节点故障，直接异或处理，求出需要的数据
      * */
-    private void repairOneByXOR(ByteBuffer[] inputs , int destroyColumn){
+    public static void repairOneByXOR(ByteBuffer[] inputs , int destroyColumn){
         int iIdx, oIdx;
         ByteBuffer output = inputs[destroyColumn];
         for (int i = 0; i <=EVENODDUtil.columnSum; i++) {

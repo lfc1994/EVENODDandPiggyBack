@@ -17,3 +17,6 @@ org.apache.hadoop.io.erasurecode.rawcoder.RSRawErasureCoderFactory
 org.apache.hadoop.io.erasurecode.rawcoder.RSLegacyRawErasureCoderFactory
 org.apache.hadoop.io.erasurecode.rawcoder.XORRawErasureCoderFactory
 org.apache.hadoop.io.erasurecode.rawcoder.EVENODDRawErasureCoderFactory
+org.apache.hadoop.io.erasurecode.rawcoder.HHNewRawErasureCoderFactory
+org.apache.hadoop.io.erasurecode.rawcoder.HHRawErasureCoderFactory
+org.apache.hadoop.io.erasurecode.rawcoder.EVENODDOriginRawErasureCoderFactory

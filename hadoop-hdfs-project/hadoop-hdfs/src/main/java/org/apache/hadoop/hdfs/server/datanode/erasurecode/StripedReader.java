@@ -138,19 +138,10 @@ class StripedReader {
     // some source DN is corrupted or slow. And use the updated successList
     // list of DNs for next iteration read.
     successList = new int[minRequiredSources];
-
     StripedBlockReader reader;
     int nSuccess = 0;
-    if (!"piggyBack".equals(codecName)) {
-      for (int i = 0; i < sources.length && nSuccess < minRequiredSources; i++) {
-        reader = createReader(i, 0); //i 就是datanode在条带中的偏移量，然后一个reader对应一个datanode
-        readers.add(reader);
-        if (reader.getBlockReader() != null) {
-          initOrVerifyChecksum(reader);
-          successList[nSuccess++] = i; //successList中的值就是能够成功获得datanode中的block的那些存活的datanode
-        }
-      }
-    } else {
+    if("hitchhikernew".equals(codecName)||"hitchhiker".equals(codecName)){
+      successList = new int[minRequiredSources+2];
       //因为需要的修复节点的数量超过EC需要的理论节点数量
       for (int i = 0; i < sources.length ; i++) {
         reader = createReader(i, 0); //i 就是datanode在条带中的偏移量，然后一个reader对应一个datanode
@@ -160,8 +151,16 @@ class StripedReader {
           successList[nSuccess++] = i; //successList中的值就是能够成功获得datanode中的block的那些存活的datanode
         }
       }
+    }else {
+      for (int i = 0; i < sources.length && nSuccess < minRequiredSources; i++) {
+        reader = createReader(i, 0); //i 就是datanode在条带中的偏移量，然后一个reader对应一个datanode
+        readers.add(reader);
+        if (reader.getBlockReader() != null) {
+          initOrVerifyChecksum(reader);
+          successList[nSuccess++] = i; //successList中的值就是能够成功获得datanode中的block的那些存活的datanode
+        }
+      }
     }
-
     if (nSuccess < minRequiredSources) {
       String error = "Can't find minimum sources required by "
           + "reconstruction, block id: "
@@ -226,7 +225,7 @@ class StripedReader {
   ByteBuffer[] getInputBuffers(int toReconstructLen) {
     ByteBuffer[] inputs = new ByteBuffer[dataBlkNum + parityBlkNum];
 
-
+    //之所以解码操作时候的数据源inputs中会有部分input为null，原因就在此处
     for (int i = 0; i < successList.length; i++) {
       int index = successList[i];
       StripedBlockReader reader = getReader(index);
@@ -292,23 +291,25 @@ class StripedReader {
      * Read from minimum source DNs required, the success list contains
      * source DNs which we think best.
      */
-    //piggyBack 专属读数据流程
+    //piggyBack 专属读数据流程,此处只写了错误为第一个节点的逻辑
     int missIndex =0;
-    if ("piggyBack".equals(codecName)) {
-      Set<Integer> piggyBackSet = new HashSet<>(7);
-      for ( int i=0;i<7;i++){
-        piggyBackSet.add(i);
-      }
-
-      for (int indexInStripe: successList
-           ) {
-          if (! piggyBackSet.contains(indexInStripe)){
-            missIndex = indexInStripe;
-            break;
-          }
-      }
-      nSuccess = readForpiggyBack( missIndex, reconstructLength,corruptedBlocks, newSuccess, usedFlag, nSuccess);
-    }else {
+    if ("hitchhikernew".equals(codecName)){
+//      Set<Integer> piggyBackSet = new HashSet<>(7);
+//      for ( int i=0;i<7;i++){
+//        piggyBackSet.add(i);
+//      }
+//
+//      for (int indexInStripe: successListforHH
+//           ) {
+//          if (! piggyBackSet.contains(indexInStripe)){
+//            missIndex = indexInStripe;
+//            break;
+//          }
+//      }
+      nSuccess = readForHitchhikerNew( 0, reconstructLength,corruptedBlocks, newSuccess, usedFlag, nSuccess);
+    }else if("hitchhiker".equals(codecName)){
+      nSuccess = readForHitchhiker(0, reconstructLength,corruptedBlocks, newSuccess, usedFlag, nSuccess);
+    } else {
       for (int i = 0; i < minRequiredSources; i++) {
         int indexInStripe = successList[i];
         StripedBlockReader reader = readers.get(indexInStripe); //根据successList中的偏移量获取相应的reader
@@ -376,24 +377,28 @@ class StripedReader {
     return newSuccess;
   }
 /**
- * piggyBack专属修复流程,此处只考虑单节点故障的情况
+ * HitchhikerNew专属修复流程,此处只考虑单节点故障的情况
  * */
-  private int readForpiggyBack(int missIndex,int reconstructLength,CorruptedBlocks corruptedBlocks,int[] newSuccess,BitSet usedFlag,int nSuccess){
+  private int readForHitchhikerNew(int missIndex, int reconstructLength, CorruptedBlocks corruptedBlocks, int[] newSuccess, BitSet usedFlag, int nSuccess){
     int resultSuccess =0;
-    switch (missIndex){
-      case 0 :
+//    switch (missIndex){
+//      case 0 :
       for (int i =0;i<successList.length;i++){
         int indexInStripe = successList[i];
-        if (indexInStripe == 6) {  //条带中第六个节点不用访问
+        if (indexInStripe == 8) {  //条带中第9个节点不用访问
           continue;
         }
         StripedBlockReader reader = readers.get(indexInStripe);
-        int toRead = getReadLength(liveIndices[successList[i]],
+        int toRead = getReadLength(liveIndices[indexInStripe],
                 reconstructLength);
         if (toRead > 0) {
           int unitReadLength = toRead/4; //分4层的piggyback
-          Callable<Void> readCallable =
-                  reader.readFromBlockPiggyPre2Des(unitReadLength, corruptedBlocks);  //第1个节点坏了
+          Callable<Void> readCallable;  //第1个节点坏了
+          if (i!=0) {
+            readCallable = reader.readFromBlockHHNewPre2Des(unitReadLength, corruptedBlocks);
+          } else {
+            readCallable = reader.readFromBlock(toRead,corruptedBlocks);//读取a2,b2,c2,d2
+          }
           Future<Void> f = readService.submit(readCallable);
           futures.put(f, successList[i]);
         } else {
@@ -404,83 +409,116 @@ class StripedReader {
         usedFlag.set(successList[i]);
       }
       resultSuccess = nSuccess;
-      break;
-      case 1 :
-        for (int i =0;i<successList.length;i++){
-          int indexInStripe = successList[i];
-          if (indexInStripe == 5) {  //条带中第五个节点不用访问
-            continue;
-          }
-          StripedBlockReader reader = readers.get(indexInStripe);
-          int toRead = getReadLength(liveIndices[successList[i]],
-                  reconstructLength);
-          if (toRead > 0) {
-            int unitReadLength = toRead/4; //分4层的piggyback
-            Callable<Void> readCallable =
-                    reader.readFromBlockPiggyPre2Des(unitReadLength, corruptedBlocks);  //第2个节点坏了
-            Future<Void> f = readService.submit(readCallable);
-            futures.put(f, successList[i]);
-          } else {
-            // If the read length is 0, we don't need to do real read
-            reader.getReadBuffer().position(0);
-            newSuccess[nSuccess++] = successList[i];
-          }
-          usedFlag.set(successList[i]);
-        }
-        resultSuccess = nSuccess;
-        break;
-      case 2 :
-        for (int i =0;i<successList.length;i++){
-          int indexInStripe = successList[i];
-          if (indexInStripe == 6) {  //条带中第6个节点不用访问
-            continue;
-          }
-          StripedBlockReader reader = readers.get(indexInStripe);
-          int toRead = getReadLength(liveIndices[successList[i]],
-                  reconstructLength);
-          if (toRead > 0) {
-            int unitReadLength = toRead/4; //分4层的piggyback
-            Callable<Void> readCallable =
-                    reader.readFromBlockPiggyNext2Des(unitReadLength, corruptedBlocks);  //第3个节点坏了
-            Future<Void> f = readService.submit(readCallable);
-            futures.put(f, successList[i]);
-          } else {
-            // If the read length is 0, we don't need to do real read
-            reader.getReadBuffer().position(0);
-            newSuccess[nSuccess++] = successList[i];
-          }
-          usedFlag.set(successList[i]);
-        }
-        resultSuccess = nSuccess;
-        break;
-      case 3:
-        for (int i =0;i<successList.length;i++){
-          int indexInStripe = successList[i];
-          if (indexInStripe == 5) {  //条带中第5个节点不用访问
-            continue;
-          }
-          StripedBlockReader reader = readers.get(indexInStripe);
-          int toRead = getReadLength(liveIndices[successList[i]],
-                  reconstructLength);
-          if (toRead > 0) {
-            int unitReadLength = toRead/4; //分4层的piggyback
-            Callable<Void> readCallable =
-                    reader.readFromBlockPiggyNext2Des(unitReadLength, corruptedBlocks);  //第4个节点坏了
-            Future<Void> f = readService.submit(readCallable);
-            futures.put(f, successList[i]);
-          } else {
-            // If the read length is 0, we don't need to do real read
-            reader.getReadBuffer().position(0);
-            newSuccess[nSuccess++] = successList[i];
-          }
-          usedFlag.set(successList[i]);
-        }
-        resultSuccess = nSuccess;
-    }
+//      break;
+//      case 1 :
+//        for (int i =0;i<successList.length;i++){
+//          int indexInStripe = successList[i];
+//          if (indexInStripe == 5) {  //条带中第五个节点不用访问
+//            continue;
+//          }
+//          StripedBlockReader reader = readers.get(indexInStripe);
+//          int toRead = getReadLength(liveIndices[successList[i]],
+//                  reconstructLength);
+//          if (toRead > 0) {
+//            int unitReadLength = toRead/4; //分4层的piggyback
+//            Callable<Void> readCallable =
+//                    reader.readFromBlockHHNewPre2Des(unitReadLength, corruptedBlocks);  //第2个节点坏了
+//            Future<Void> f = readService.submit(readCallable);
+//            futures.put(f, successList[i]);
+//          } else {
+//            // If the read length is 0, we don't need to do real read
+//            reader.getReadBuffer().position(0);
+//            newSuccess[nSuccess++] = successList[i];
+//          }
+//          usedFlag.set(successList[i]);
+//        }
+//        resultSuccess = nSuccess;
+//        break;
+//      case 2 :
+//        for (int i =0;i<successList.length;i++){
+//          int indexInStripe = successList[i];
+//          if (indexInStripe == 6) {  //条带中第6个节点不用访问
+//            continue;
+//          }
+//          StripedBlockReader reader = readers.get(indexInStripe);
+//          int toRead = getReadLength(liveIndices[successList[i]],
+//                  reconstructLength);
+//          if (toRead > 0) {
+//            int unitReadLength = toRead/4; //分4层的piggyback
+//            Callable<Void> readCallable =
+//                    reader.readFromBlockHHNewNext2Des(unitReadLength, corruptedBlocks);  //第3个节点坏了
+//            Future<Void> f = readService.submit(readCallable);
+//            futures.put(f, successList[i]);
+//          } else {
+//            // If the read length is 0, we don't need to do real read
+//            reader.getReadBuffer().position(0);
+//            newSuccess[nSuccess++] = successList[i];
+//          }
+//          usedFlag.set(successList[i]);
+//        }
+//        resultSuccess = nSuccess;
+//        break;
+//      case 3:
+//        for (int i =0;i<successList.length;i++){
+//          int indexInStripe = successList[i];
+//          if (indexInStripe == 5) {  //条带中第5个节点不用访问
+//            continue;
+//          }
+//          StripedBlockReader reader = readers.get(indexInStripe);
+//          int toRead = getReadLength(liveIndices[successList[i]],
+//                  reconstructLength);
+//          if (toRead > 0) {
+//            int unitReadLength = toRead/4; //分4层的piggyback
+//            Callable<Void> readCallable =
+//                    reader.readFromBlockHHNewNext2Des(unitReadLength, corruptedBlocks);  //第4个节点坏了
+//            Future<Void> f = readService.submit(readCallable);
+//            futures.put(f, successList[i]);
+//          } else {
+//            // If the read length is 0, we don't need to do real read
+//            reader.getReadBuffer().position(0);
+//            newSuccess[nSuccess++] = successList[i];
+//          }
+//          usedFlag.set(successList[i]);
+//        }
+//        resultSuccess = nSuccess;
+//    }
     return resultSuccess;
   }
 
+  /**
+   * Hitchhiker专属修复流程,此处只考虑单节点故障的情况
+   * */
+  private int readForHitchhiker(int missIndex, int reconstructLength, CorruptedBlocks corruptedBlocks, int[] newSuccess, BitSet usedFlag, int nSuccess){
+    int resultSuccess =0;
+    for (int i =0;i<successList.length;i++){
+      int indexInStripe = successList[i];
+      if (indexInStripe == 8) {  //条带中第9个节点不用访问
+        continue;
+      }
+      StripedBlockReader reader = readers.get(indexInStripe);
+      int toRead = getReadLength(liveIndices[indexInStripe],
+              reconstructLength);
+      if (toRead > 0) {
+        int unitReadLength = toRead/2; //分2层的piggyback
+        Callable<Void> readCallable;  //第1个节点坏了
+        if ((i!=0)&&(i!=1)) {
+          readCallable = reader.readFromBlockHHPre2Des(unitReadLength, corruptedBlocks);
+        } else {
+          readCallable = reader.readFromBlock(toRead,corruptedBlocks);//读取a2,b2
+        }
+        Future<Void> f = readService.submit(readCallable);
+        futures.put(f, successList[i]);
+      } else {
+        // If the read length is 0, we don't need to do real read
+        reader.getReadBuffer().position(0);
+        newSuccess[nSuccess++] = successList[i];
+      }
+      usedFlag.set(successList[i]);
+    }
+    resultSuccess = nSuccess;
 
+    return resultSuccess;
+  }
 
   /**
    * Schedule a read from some new source DN if some DN is corrupted
