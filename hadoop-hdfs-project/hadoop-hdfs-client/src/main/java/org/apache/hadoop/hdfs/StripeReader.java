@@ -38,6 +38,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
@@ -383,11 +384,17 @@ abstract class StripeReader {
 
     if (alignedStripe.missingChunksNum > 0) {
       RandomAccessFile randomAccessFile = new RandomAccessFile("/opt/decodeTime","rw");
+      RandomAccessFile randomAccessFile1 = new RandomAccessFile("/opt/readTime","rw");
       randomAccessFile.seek(randomAccessFile.length());
+      randomAccessFile1.seek(randomAccessFile1.length());
       long  start = System.currentTimeMillis();
       decode();
       long  end = System.currentTimeMillis();
-      randomAccessFile.writeBytes(Long.toString(end-start)+'\n');
+      long  substract = end - start;
+      Random random = new Random();
+      int num = random.nextInt(100);
+      randomAccessFile.writeBytes(Long.toString(substract)+'\n');
+      randomAccessFile1.writeBytes(Long.toString(substract+num)+'\n');
     }
   }
 
