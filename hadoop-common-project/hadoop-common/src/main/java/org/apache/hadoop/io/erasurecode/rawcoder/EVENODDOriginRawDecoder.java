@@ -20,8 +20,12 @@ public class EVENODDOriginRawDecoder extends RawErasureDecoder {
         int[] erasuredIndex = decodingState.erasedIndexes;
         //为了适配evenodd函数而做的一些辅助性操作
         int outPutIndex = 0;
+        System.out.println("decodingState.inputs.length");
+        System.out.println(decodingState.inputs.length);
         for (int j=0;j<decodingState.inputs.length;j++){
+            System.out.println("j="+j);
             if (decodingState.inputs[j]==null){
+                System.out.println("enter into null judge, where once throw ArrayIndexOutOfBound");
                 decodingState.inputs[j]=decodingState.outputs[outPutIndex];
                 outPutIndex++;
             }
