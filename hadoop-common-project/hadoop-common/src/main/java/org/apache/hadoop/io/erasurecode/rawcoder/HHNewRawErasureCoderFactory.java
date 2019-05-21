@@ -11,11 +11,13 @@ public class HHNewRawErasureCoderFactory implements RawErasureCoderFactory{
     @Override
     public RawErasureEncoder createEncoder(ErasureCoderOptions coderOptions) {
         return new RSRawEncoder(coderOptions);
+//        return new HHNewRawEncoder(coderOptions);
     }
 
     @Override
     public RawErasureDecoder createDecoder(ErasureCoderOptions coderOptions) {
         return new RSRawDecoder(coderOptions);
+//        return new HHNewRawDecoder(coderOptions);
     }
 
     @Override

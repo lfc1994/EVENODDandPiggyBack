@@ -22,10 +22,14 @@ public class EVENODDRawDecoder extends RawErasureDecoder {
         int[] erasuredIndex = decodingState.erasedIndexes;
         //为了适配evenodd函数而做的一些辅助性操作
         int outPutIndex = 0;
+        int outPutLimit = decodingState.outputs.length-1;
         for (int j=0;j<decodingState.inputs.length;j++){
             if (decodingState.inputs[j]==null){
                 decodingState.inputs[j]=decodingState.outputs[outPutIndex];
                 outPutIndex++;
+                if (outPutIndex>outPutLimit){
+                    break;
+                }
             }
         }
         if (erasuredIndex.length ==1){   //单节点故障
