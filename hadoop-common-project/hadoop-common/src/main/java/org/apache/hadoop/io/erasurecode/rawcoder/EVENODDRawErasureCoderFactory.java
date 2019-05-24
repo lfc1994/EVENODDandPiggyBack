@@ -14,14 +14,12 @@ public class EVENODDRawErasureCoderFactory implements RawErasureCoderFactory {
 
     @Override
     public RawErasureEncoder createEncoder(ErasureCoderOptions coderOptions) {
-        return new RSRawEncoder(coderOptions);
-//        return new EVENODDRawEncoder(coderOptions);
+        return new EVENODDRawEncoder(coderOptions);
     }
 
     @Override
     public RawErasureDecoder createDecoder(ErasureCoderOptions coderOptions) {
-        return new RSRawDecoder(coderOptions);
-//        return new EVENODDRawDecoder(coderOptions);
+        return new EVENODDRawDecoder(coderOptions);
     }
 
     @Override
